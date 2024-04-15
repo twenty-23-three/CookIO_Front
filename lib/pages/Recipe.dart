@@ -40,7 +40,7 @@ class _RecipeState extends State<Recipe> {
                       itemBuilder: (context, index) {
                         return ListTile(
                           title: Text(
-                              'Шаг ${items.Description[index].StepNumber + 1}: ${items.Description[index].Step}'),
+                              'Шаг ${items.Description[index].StepNumber}: ${items.Description[index].Step}'),
                         );
                       },
                     ),
@@ -52,7 +52,7 @@ class _RecipeState extends State<Recipe> {
                       itemBuilder: (context, index) {
                         return ListTile(
                           title: Text(
-                              '${items.Products[index].ProductID + 1}: ${items.Products[index].Name} ${items.Products[index].Weight}гр.'),
+                              '${items.Products[index].ProductID}: ${items.Products[index].Name} ${items.Products[index].Weight}гр.'),
                         );
                       },
                     ),

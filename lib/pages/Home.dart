@@ -1,3 +1,4 @@
+import 'package:cookrecipe/pages/AccountChange.dart';
 import 'package:flutter/material.dart';
 import 'package:cookrecipe/pages/login.dart';
 import 'package:image_picker/image_picker.dart';
@@ -160,13 +161,6 @@ class _HomePageState extends State<HomePage> {
                 height: 200,
                 child: InkWell(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => Insert(
-                              email: widget.email.text,
-                              password: widget.password.text)),
-                    );
                   },
                   child: Card(
                     child: ListTile(
@@ -240,7 +234,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
 
-        /// Messages page
+        /// Account page
         Padding(
           padding: const EdgeInsets.only(top: 40),
           child: Align(
@@ -262,63 +256,119 @@ class _HomePageState extends State<HomePage> {
                                 .pickImage(source: ImageSource.gallery);
                             if (pickedFile != null) {
                               // Вызываем функцию для отправки файла на сервер
-                              be.uploadFile(File(pickedFile.path), items.Email,
-                                  'users', 'uploaduser');
-                              be.updateImage(
-                                  "http://localhost:3000/assets/images/${items.Email}.png",
-                                  items.UserID);
-                              setState(() {
-                                // Обновляем данные в виджете, чтобы перестроить интерфейс с новым изображением
-                                updateList();
-                              });
+
+                             be.uploadFile(File(pickedFile.path), items.Email,
+                              'users', 'uploaduser');
+                             updateList();
+
                             }
                           },
                           child: CircleAvatar(
                             radius: 60,
                             backgroundImage: NetworkImage(
-                                "${items?.Image}?${DateTime.now().millisecondsSinceEpoch}"),
+                                "${items?.Image}?${DateTime.now().millisecondsSinceEpoch}"
+                            ),
                           ),
                         ),
-                        Row(
-                          children: [
-                            if (isButton == false)
-                              SizedBox(
-                                width: 150,
-                                child: Text(
-                                  '${items?.NickName}',
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                  ),
-                                ),
-                              )
-                            else
-                              SizedBox(
-                                width: 150,
-                                child: TextField(
-                                  controller: NickNameContrl,
-                                  decoration: InputDecoration(
-                                    border: OutlineInputBorder(),
-                                    labelText: NickName,
+                        SizedBox(
+                          width: 150,
+                          child: Text(
+                            '${items?.NickName}',
+                            style: const TextStyle(
+                              fontSize: 28,
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width:double.infinity,
+                          child: TextButton(onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Insert(
+                                      iduser:items.UserID),
+                                )
+                            );
+                          },
+                              style: ButtonStyle(
+                                shape: MaterialStateProperty.all(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(0), // Устанавливаем радиус скругления в 0, чтобы получить острые края
                                   ),
                                 ),
                               ),
-                            IconButton(
-                              icon: isButton == false
-                                  ? Icon(Icons.update)
-                                  : Icon(Icons.done),
-                              onPressed: () async {
-                                if (isButton == false) {
-                                  toggleButton();
-                                  print("хуй $isButton");
-                                  print('${NickNameContrl.text}');
-                                } else {
-                                  be.updateNickname(
-                                      "${NickNameContrl.text}", items.UserID);
-                                  toggleButton();
-                                }
-                              },
+                              child: Text("Загрузить рецепт",
+                              style: TextStyle(
+                                fontSize: 24,
+                              ),)
+                          )
+                        ),
+                        SizedBox(
+                            width:double.infinity,
+                            child: TextButton(onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Account(
+                                        image: items.Image.toString(),
+                                        nickname: items.NickName.toString(),
+                                        iduser:items.UserID)),
+                              );
+                            },
+                                style: ButtonStyle(
+                                  shape: MaterialStateProperty.all(
+                                    RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(0), // Устанавливаем радиус скругления в 0, чтобы получить острые края
+                                    ),
+                                  ),
+                                ),
+                                child: Text("Изменить профиль",
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                  ),)
                             )
-                          ],
+                        ),
+                        Expanded(
+                          child: FutureBuilder<List<Recipes>>(
+                            future: be.RecipesByUser(items.UserID),
+                            builder: (BuildContext context,
+                                AsyncSnapshot<List<Recipes>> snapshot) {
+                              if (snapshot.hasData) {
+                                List<Recipes>? items = snapshot.data;
+                                if (items != null) {
+                                  return ListView.builder(
+                                      itemCount: items.length,
+                                      itemBuilder: (context, index) {
+                                        return ListTile(
+                                          title: Text(
+                                              'Название блюда: ${items[index].Name}'),
+                                          leading: GestureDetector(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) => Recipe(
+                                                        id: items[index].RecipeID)),
+                                              );
+                                            },
+                                            child: CircleAvatar(
+                                              radius: 40,
+                                              backgroundImage:
+                                              NetworkImage('${items[index].Image}'),
+                                            ),
+                                          ),
+                                          subtitle: Text(''),
+                                        );
+                                      });
+                                }
+                              } else {
+                                return Center(
+                                  child: Text("Empty"),
+                                );
+                              }
+                              return CircularProgressIndicator();
+                            },
+                          ),
                         ),
                       ],
                     );

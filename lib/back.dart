@@ -33,28 +33,18 @@ class BackEnd {
     }
   }
 
-  Future<void> updateImage(String image, int id) async {
+  Future<void> update(String name, String image, int id) async {
     try {
       var request = await client.put(
         Uri.parse("$baseUrl/users/$id"),
-        body: json.encode({"image": image}),
+        body: json.encode({
+          "image": image,
+          "nickname":name}),
       );
+      print(request.body);
       // Обработка успешного обновления изображения
     } catch (e) {
       print("Error updating image: $e");
-      // Обработка ошибки
-    }
-  }
-
-  Future<void> updateNickname(String nickName, int id) async {
-    try {
-      var request = await client.put(
-        Uri.parse("$baseUrl/users/$id"),
-        body: json.encode({"nickname": nickName}),
-      );
-      // Обработка успешного обновления никнейма
-    } catch (e) {
-      print("Error updating nickname: $e");
       // Обработка ошибки
     }
   }
@@ -101,7 +91,7 @@ class BackEnd {
           "email": email,
         }),
         headers: {
-          "Content-Type": "application/json", // Замените YOUR_ACCESS_TOKEN на реальный токен
+          "Content-Type": "application/json", //token
         },
       );
 
@@ -237,6 +227,7 @@ class BackEnd {
       return recipes;
     }
   }
+
   Future<Recipes> getRecipeById(int id) async {
     final url = Uri.parse('$baseUrl/recipes/$id'); // замените на ваш реальный URL
     final response = await http.get(url);
@@ -279,6 +270,57 @@ class BackEnd {
   }
 
 
+  Future<List<Recipes>> RecipesByUser(int id) async {
+    List<Recipes> recipes = [];
+    try {
+      var response = await client.post(
+        Uri.parse("$baseUrl/recipes/$id"),
+      );
+
+      print(response.body);
+
+      var jsonResponse = jsonDecode(response.body);
+
+      // Проверяем, что "recipe" не является null
+      if (jsonResponse["recipe"] != null) {
+        // Проверяем, что "recipe" является массивом
+        if (jsonResponse["recipe"] is List) {
+          for (var o in jsonResponse["recipe"]) {
+            List<Product> products = [];
+            if (o["product"] != null && o["product"] is List) {
+              for (var i in o["product"]) {
+                Product ln = Product(ProductID: i["product_id"], Name: i["name"], Weight: i["weight"]);
+                products.add(ln);
+              }
+            }
+
+            List<Steps> steps = [];
+            if (o["step"] != null && o["step"] is List) {
+              for (var i in o["step"]) {
+                Steps ln = Steps(StepNumber: i["step_number"], Step: i["step"]);
+                steps.add(ln);
+              }
+            }
+            Recipes recipe = Recipes(
+              RecipeID: o["recipe_id"],
+              UserID: o["user_id"],
+              Image: o["image"],
+              Name: o["name"],
+              Description: steps,
+              Products: products,
+              Category: o["category"],
+              Tag: o["tag"],
+            );
+            recipes.add(recipe);
+          }
+        }
+      }
+    } catch (e) {
+      print("Error $e");
+    } finally {
+      return recipes;
+    }
+  }
 
   void close() {
     client.close();

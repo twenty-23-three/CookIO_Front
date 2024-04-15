@@ -10,10 +10,9 @@ import 'Register.dart';
 class Insert extends StatefulWidget {
 
 
-  final String email;
-  final String password;
+  final int iduser;
 
-  const Insert({Key? key, required this.email, required this.password}) : super(key: key);
+  const Insert({Key? key, required this.iduser}) : super(key: key);
   @override
   State<Insert> createState() => _InsertState();
 }
@@ -27,7 +26,6 @@ TextEditingController nameController = TextEditingController();
 TextEditingController weightController = TextEditingController();
 TextEditingController stepController = TextEditingController();
 
-int iduser=0;
 int currentStepNumber = 0;
 int currentProductID = 0;
 const List<String> category = <String>['Завтрак', 'Обед', 'Ужин', 'Перекус'];
@@ -59,10 +57,20 @@ class _InsertState extends State<Insert> {
             icon: Icon(Icons.check_circle_outline,
                 color: Colors.green), // Иконка вашей кнопки
             onPressed: () async{
-              Users users = Users(UserID: 0, Email: "${widget.email}", Password: "${widget.password}");
-              Users loggedInUser = await be.login(users);
-              iduser = loggedInUser.UserID;
               uploadAndAdd();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      CircularProgressIndicator(), // Кругляшок кружится
+                      SizedBox(width: 20), // Пространство между кругляшком и текстом
+                      Text('Рецепт загружается...'), // Текст
+                    ],
+                  ),
+                  backgroundColor: Colors.blueGrey, // Цвет фона
+                  duration: Duration(seconds: 3), // Длительность отображения
+                ),
+              );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Рецепт загружен'),
@@ -193,15 +201,6 @@ class _InsertState extends State<Insert> {
     );
   }
 
-  Future<void> uploadAndAdd() async {
-    try {
-      await be.uploadFile(File(image), '${name.text}.$iduser','recipes', 'uploadrecipe');
-      await Future.delayed(Duration(seconds: 2));
-      add();
-    } catch (error) {
-      print('Error: $error');
-    }
-  }
 
   void addProduct() async {
     String name = nameController.text;
@@ -212,19 +211,28 @@ class _InsertState extends State<Insert> {
     String step = stepController.text;
     steps.add(Steps(StepNumber: currentStepNumber, Step: step));
   }
-
+  Future<void> uploadAndAdd() async {
+    try {
+      await be.uploadFile(File(image), '${name.text}.${widget.iduser}','recipes', 'uploadrecipe');
+      add();
+    } catch (error) {
+      print('Error: $error');
+    }
+  }
   void add() async{
     Recipes o =Recipes(
         RecipeID: 0,
-        UserID: iduser,
+        UserID: widget.iduser,
         Name: name.text,
-        Image:'http://localhost:3000/assets/recipes/${name.text}.$iduser.png',
+        Image:'http://localhost:3000/assets/recipes/${name.text}.${widget.iduser}.png',
         Description: steps,
         Products: products,
         Category: dropdownCategory,
         Tag: dropdownTag);
-     await be.add(o);
+    await be.add(o);
   }
+
+
 }
 
 
